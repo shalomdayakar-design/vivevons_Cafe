@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIVEVONS | More Than Just a Café — The Café of Second Chances</title>
+    <meta name="description" content="VIVEVONS is more than just a café — a warm creative space where coffee meets creativity, conversations become ideas, and unfinished dreams are welcome.">
+    <meta name="theme-color" content="#263F32">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Reenie+Beanie&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        olive: { DEFAULT: "#263F32", dark: "#1B2D24", light: "#335242" },
+                        walnut: { DEFAULT: "#5A402B", dark: "#443020", light: "#72533B" },
+                        cream: { DEFAULT: "#F4EBDD", light: "#FAF5ED", dark: "#E8DCB8" },
+                        terracotta: { DEFAULT: "#B96F4A", dark: "#9C5A39", light: "#CC825D" },
+                        espresso: { DEFAULT: "#211A15", dark: "#15100C", light: "#332A24" },
+                        sage: { DEFAULT: "#89947B", light: "#A4AE98", dark: "#6F7963" },
+                        offwhite: { DEFAULT: "#FBF8F2", warm: "#F7F2E9" }
+                    },
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        hand: ['"Reenie Beanie"', 'cursive', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React, ReactDOM, Babel, Canvas Confetti CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        ::selection { background-color: #263F32; color: #F4EBDD; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #FBF8F2; }
+        ::-webkit-scrollbar-thumb { background: #263F32; border-radius: 3px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .paper-grain {
+            background-image: radial-gradient(rgba(38, 63, 50, 0.05) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+        .hover-underline-animation { position: relative; }
+        .hover-underline-animation::after {
+            content: ''; position: absolute; width: 100%; transform: scaleX(0); height: 1px;
+            bottom: -2px; left: 0; background-color: currentColor; transform-origin: bottom right;
+            transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        .hover-underline-animation:hover::after { transform: scaleX(1); transform-origin: bottom left; }
+        @keyframes steam {
+            0% { transform: translateY(0) scaleX(1); opacity: 0.2; }
+            50% { transform: translateY(-15px) scaleX(1.15); opacity: 0.8; }
+            100% { transform: translateY(-30px) scaleX(1.3); opacity: 0; }
+        }
+        .animate-steam { animation: steam 2.8s ease-out infinite; }
+    </style>
+</head>
+<body class="bg-offwhite text-espresso font-sans antialiased selection:bg-olive selection:text-cream overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, Component } = React;
+
+        // Safe Confetti trigger
+        const triggerConfetti = (opts) => {
+            if (typeof window !== 'undefined' && typeof window.confetti === 'function') {
+                try { window.confetti(opts); } catch(e){}
+            }
+        };
+
+        // --- ERROR BOUNDARY ---
+        class ErrorBoundary extends Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false };
+            }
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+            componentDidCatch(error, errorInfo) {
+                console.error("VIVEVONS App Error:", error, errorInfo);
+            }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="min-h-screen bg-espresso text-cream flex items-center justify-center p-6 text-center">
+                            <div className="max-w-md space-y-4">
+                                <h2 className="font-serif text-3xl uppercase text-terracotta">VIVEVONS SANCTUARY</h2>
+                                <p className="font-sans text-xs text-sage">Application experienced a minor state error. Click below to refresh.</p>
+                                <button onClick={() => window.location.reload()} className="px-6 py-3 bg-terracotta text-cream rounded-full text-xs font-mono uppercase">
+                                    RELOAD SANCTUARY
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        // --- UNIFIED DATABASE ENGINE ---
+        const DEFAULT_MENU = [
+            { id: 'c1', creativeName: 'THE FIRST DRAFT', normalName: 'CAPPUCCINO', price: '$5.50', category: 'coffee', description: 'Double espresso poured over velvety micro-foamed milk with dark cocoa.', image: 'https://images.unsplash.com/photo-1534778101976-62847782c213?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' },
+            { id: 'c2', creativeName: 'THE COMEBACK', normalName: 'COLD BREW & OAT MILK', price: '$6.00', category: 'coffee', description: '24-hour slow steeped cold brew over carved ice with creamed oat milk.', image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' },
+            { id: 't1', creativeName: 'THE COMFORT CHAPTER', normalName: 'MASALA CHAI', price: '$5.00', category: 'tea', description: 'Assam black tea simmered with green cardamom, ginger, cinnamon, and whole milk.', image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' },
+            { id: 'd1', creativeName: 'THE HAPPY ENDING', normalName: 'CHOCOLATE SHAKE', price: '$7.50', category: 'cold-drinks', description: 'Valrhona dark chocolate gelato blended with roasted hazelnuts and whipped cream.', image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' },
+            { id: 'p1', creativeName: 'THE BLANK CANVAS', normalName: 'MARGHERITA PIZZA', price: '$16.00', category: 'pizzas', description: '72-hour sourdough, San Marzano tomato reduction, fresh fior di latte mozzarella.', image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' },
+            { id: 'b1', creativeName: 'THE FRESH START', normalName: 'VEG BURGER', price: '$14.50', category: 'burgers', description: 'Crispy sweet potato & quinoa patty, aged cheddar, avocado mash on warm brioche.', image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' },
+            { id: 'pa1', creativeName: 'THE PLOT TWIST', normalName: 'ITALIAN PASTA', price: '$17.00', category: 'pasta', description: 'Handmade tortellini tossed in sage brown butter and shaved parmesan.', image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' },
+            { id: 's1', creativeName: 'THE BIG IDEA', normalName: 'LOADED POTATO BOATS', price: '$11.00', category: 'snacks', description: 'Yukon gold skins filled with smoked Gouda, shallots, chives, and truffle aioli.', image: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?q=80&w=800&auto=format&fit=crop', availability: 'AVAILABLE' }
+        ];
+
+        const DEFAULT_GALLERY = [
+            { id: 'g1', title: 'Warm Sanctuary Light', category: 'interior', image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop', isPublished: true },
+            { id: 'g2', title: 'The Artisanal Pour', category: 'coffee', image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1000&auto=format&fit=crop', isPublished: true },
+            { id: 'g3', title: 'Sourdough & Stories', category: 'food', image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=1200&auto=format&fit=crop', isPublished: true },
+            { id: 'g4', title: 'Table 02 Corner', category: 'tables', image: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?q=80&w=1000&auto=format&fit=crop', isPublished: true },
+            { id: 'g5', title: 'Signature Physical Wall', category: 'details', image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop', isPublished: true },
+            { id: 'g6', title: 'Conversations at Dusk', category: 'people', image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200&auto=format&fit=crop', isPublished: true }
+        ];
+
+        const DEFAULT_TABLES = [
+            { id: 't1', num: '01', title: 'THE FIRST IDEA', sub: 'For dreamers just getting started.', desc: 'Beside the morning light, Table 01 is designed for the spark. A quiet corner equipped with oak surface, power sockets, and space for morning espresso.', quote: '"Every skyscraper once began as a scribble on a napkin."', tags: ['Solitary Focus', 'Early Brainstorming'], img: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200&auto=format&fit=crop' },
+            { id: 't2', num: '02', title: 'THE NOTEBOOK', sub: 'For writing, drawing and planning.', desc: 'Surrounded by botanical greenery and soft pendant lighting. Designed with extra depth so laptop, notebook, and fresh coffee co-exist peacefully.', quote: '"Paper is patient enough to hold whatever you dare to write."', tags: ['Creative Writing', 'Deep Work'], img: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?q=80&w=1200&auto=format&fit=crop' },
+            { id: 't3', num: '03', title: 'THE PAUSE', sub: 'For a quiet moment to breathe.', desc: 'A cozy plush armchair nook tucked near the courtyard window. No rush, simply slow coffee, soft vinyl records, and permission to reset.', quote: '"Sometimes the most productive thing you can do is pause."', tags: ['Reading', 'Daydreaming'], img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop' },
+            { id: 't4', num: '04', title: 'THE CONVERSATION', sub: 'For friends and unexpected connections.', desc: 'A communal solid walnut table built for 6. Where founders meet collaborators, old friends reconnect, and hellos turn into partnerships.', quote: '"Great ideas don’t live in isolation; they thrive in dialogue."', tags: ['Collaborative Meets', 'Friendly Gatherings'], img: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200&auto=format&fit=crop' },
+            { id: 't5', num: '05', title: 'THE BEGINNING AGAIN', sub: 'For anyone ready to start something new.', desc: 'Our signature window table overlooking the street. Dedicated to second chances — pivot your career, rewrite your project, or launch a fresh start.', quote: '"You don’t have to stay who you were yesterday."', tags: ['New Ventures', 'Fresh Starts'], img: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1200&auto=format&fit=crop' }
+        ];
+
+        const DEFAULT_IDEAS = [
+            { id: '1', name: 'Elena R.', title: 'A sustainable ceramics studio', msg: 'Quitting corporate finance. Sitting at Table 03, sketching my kiln layout.', cat: 'UNFINISHED DREAMS', likes: 24, status: 'APPROVED' },
+            { id: '2', name: 'Marcus K.', title: 'The Unfinished Novel', msg: 'Chapter 4 sat untouched for 2 years. Today, over a cold brew, I wrote 1,800 words.', cat: 'CREATIVE WRITING', likes: 42, status: 'APPROVED' },
+            { id: '3', name: 'Aria & David', title: 'An open-source mental health app', msg: 'Met at Table 04 by complete accident. Now co-founding our application.', cat: 'PROJECTS', likes: 89, status: 'APPROVED' }
+        ];
+
+        const DEFAULT_CONTACT = {
+            address: '428 Sanctuary Lane, Creative District',
+            city: 'Metropolis, MP 10001',
+            phone: '+1 (555) 848-3866',
+            email: 'hello@vivevons.com',
+            whatsapp: '+15558483866',
+            instagramUrl: 'https://instagram.com/vivevons',
+            facebookUrl: 'https://facebook.com/vivevons',
+            googleMapsUrl: 'https://maps.google.com'
+        };
+
+        const DEFAULT_HOURS = [
+            { dayName: 'Monday', openTime: '07:30', closeTime: '22:00', isClosed: false },
+            { dayName: 'Tuesday', openTime: '07:30', closeTime: '22:00', isClosed: false },
+            { dayName: 'Wednesday', openTime: '07:30', closeTime: '22:00', isClosed: false },
+            { dayName: 'Thursday', openTime: '07:30', closeTime: '22:00', isClosed: false },
+            { dayName: 'Friday', openTime: '07:30', closeTime: '22:00', isClosed: false },
+            { dayName: 'Saturday', openTime: '08:00', closeTime: '23:00', isClosed: false },
+            { dayName: 'Sunday', openTime: '08:00', closeTime: '23:00', isClosed: false }
+        ];
+
+        class DatabaseService {
+            constructor() {
+                this.listeners = new Set();
+                this.init();
+            }
+            subscribe(cb) { this.listeners.add(cb); return () => this.listeners.delete(cb); }
+            notify() { this.listeners.forEach(cb => cb()); }
+            get(k, fb) { try { const d = localStorage.getItem(`vv_${k}`); return d ? JSON.parse(d) : fb; } catch { return fb; } }
+            set(k, v) { try { localStorage.setItem(`vv_${k}`, JSON.stringify(v)); this.notify(); } catch(e){} }
+            init() {
+                if (!localStorage.getItem('vv_init_v8')) {
+                    this.set('menu', DEFAULT_MENU);
+                    this.set('gallery', DEFAULT_GALLERY);
+                    this.set('tables', DEFAULT_TABLES);
+                    this.set('ideas', DEFAULT_IDEAS);
+                    this.set('contact', DEFAULT_CONTACT);
+                    this.set('hours', DEFAULT_HOURS);
+                    this.set('reservations', []);
+                    this.set('logs', [{ id: '1', email: 'owner@vivevons.com', role: 'SUPER_ADMIN', action: 'CMS_INIT', details: 'Database initialized', timestamp: new Date().toLocaleString() }]);
+                    this.set('users', [
+                        { id: '1', email: 'owner@vivevons.com', fullName: 'Founder & Owner', role: 'SUPER_ADMIN', isActive: true },
+                        { id: '2', email: 'manager@vivevons.com', fullName: 'General Manager', role: 'ADMIN', isActive: true },
+                        { id: '3', email: 'editor@vivevons.com', fullName: 'Content Editor', role: 'EDITOR', isActive: true }
+                    ]);
+                    localStorage.setItem('vv_init_v8', 'true');
+                }
+            }
+            getMenuItems(pubOnly = true) {
+                const list = this.get('menu', DEFAULT_MENU);
+                return pubOnly ? list.filter(i => i.availability !== 'HIDDEN' && !i.deletedAt) : list;
+            }
+            saveMenuItem(item) {
+                const list = this.getMenuItems(false);
+                if (item.id) {
+                    const idx = list.findIndex(i => i.id === item.id);
+                    list[idx] = { ...list[idx], ...item };
+                } else {
+                    list.unshift({ ...item, id: `item-${Date.now()}` });
+                }
+                this.set('menu', list);
+            }
+            deleteMenuItem(id) {
+                this.set('menu', this.getMenuItems(false).filter(i => i.id !== id));
+            }
+            getGallery(pubOnly = true) {
+                const list = this.get('gallery', DEFAULT_GALLERY);
+                return pubOnly ? list.filter(g => g.isPublished) : list;
+            }
+            saveGallery(img) {
+                const list = this.getGallery(false);
+                if (img.id) {
+                    const idx = list.findIndex(g => g.id === img.id);
+                    list[idx] = { ...list[idx], ...img };
+                } else {
+                    list.unshift({ ...img, id: `g-${Date.now()}` });
+                }
+                this.set('gallery', list);
+            }
+            deleteGallery(id) {
+                this.set('gallery', this.getGallery(false).filter(g => g.id !== id));
+            }
+            getTables() { return this.get('tables', DEFAULT_TABLES); }
+            saveTable(t) {
+                const list = this.getTables();
+                const idx = list.findIndex(x => x.id === t.id);
+                if (idx !== -1) { list[idx] = t; this.set('tables', list); }
+            }
+            getIdeas(statusFilter = 'ALL') {
+                const list = this.get('ideas', DEFAULT_IDEAS);
+                return statusFilter === 'ALL' ? list : list.filter(i => i.status === statusFilter);
+            }
+            submitIdea(idea) {
+                const list = this.getIdeas('ALL');
+                const newObj = { ...idea, id: `idea-${Date.now()}`, likes: 1, status: 'PENDING' };
+                list.unshift(newObj);
+                this.set('ideas', list);
+            }
+            updateIdeaStatus(id, status) {
+                const list = this.getIdeas('ALL');
+                const idx = list.findIndex(i => i.id === id);
+                if (idx !== -1) { list[idx].status = status; this.set('ideas', list); }
+            }
+            getReservations(statusFilter = 'ALL') {
+                const list = this.get('reservations', []);
+                return statusFilter === 'ALL' ? list : list.filter(r => r.status === statusFilter);
+            }
+            submitReservation(res) {
+                const list = this.getReservations('ALL');
+                const newRes = { ...res, id: `res-${Date.now()}`, bookingRef: `VV-${Math.floor(100000 + Math.random() * 900000)}`, status: 'PENDING', createdAt: new Date().toLocaleString() };
+                list.unshift(newRes);
+                this.set('reservations', list);
+                return newRes;
+            }
+            updateReservationStatus(id, status) {
+                const list = this.getReservations('ALL');
+                const idx = list.findIndex(r => r.id === id);
+                if (idx !== -1) { list[idx].status = status; this.set('reservations', list); }
+            }
+            getContact() { return this.get('contact', DEFAULT_CONTACT); }
+            saveContact(c) { this.set('contact', c); }
+            getHours() { return this.get('hours', DEFAULT_HOURS); }
+            saveHours(h) { this.set('hours', h); }
+            getLogs() { return this.get('logs', []); }
+            log(email, role, action, details) {
+                const list = this.getLogs();
+                list.unshift({ id: `log-${Date.now()}`, email, role, action, details, timestamp: new Date().toLocaleString() });
+                this.set('logs', list.slice(0, 100));
+            }
+            getUsers() { return this.get('users', []); }
+            saveUser(u) {
+                const list = this.getUsers();
+                if (u.id) {
+                    const idx = list.findIndex(x => x.id === u.id);
+                    list[idx] = { ...list[idx], ...u };
+                } else {
+                    list.push({ ...u, id: `usr-${Date.now()}`, isActive: true });
+                }
+                this.set('users', list);
+            }
+        }
+
+        const db = new DatabaseService();
+
+        // Auth helper
+        const auth = {
+            getUser() {
+                try { return JSON.parse(localStorage.getItem('vv_auth')); } catch { return null; }
+            },
+            login(email, pass) {
+                const users = db.getUsers();
+                const u = users.find(x => x.email.toLowerCase() === email.trim().toLowerCase());
+                if (!u) return { success: false, error: 'User not found.' };
+                if (pass !== 'vivevons2026') return { success: false, error: 'Invalid password. (Use: vivevons2026)' };
+                localStorage.setItem('vv_auth', JSON.stringify(u));
+                db.log(u.email, u.role, 'LOGIN', 'Admin logged into CMS console.');
+                return { success: true, user: u };
+            },
+            logout() {
+                const u = auth.getUser();
+                if (u) db.log(u.email, u.role, 'LOGOUT', 'Admin session ended.');
+                localStorage.removeItem('vv_auth');
+            }
+        };
+
+        // --- STEAMING COFFEE PRELOADER ANIMATION ---
+        const SteamingCoffeePreloader = ({ onComplete }) => {
+            const [progress, setProgress] = useState(0);
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setProgress((prev) => {
+                        if (prev >= 100) {
+                            clearInterval(interval);
+                            setTimeout(onComplete, 400);
+                            return 100;
+                        }
+                        return prev + 12;
+                    });
+                }, 100);
+                return () => clearInterval(interval);
+            }, [onComplete]);
+
+            return (
+                <div className="fixed inset-0 z-[100] bg-espresso text-cream flex flex-col items-center justify-between p-8 md:p-16 select-none transition-opacity duration-700 paper-grain">
+                    <div className="text-xs font-mono uppercase tracking-[0.3em] text-sage">EST. 2026 — VIVEVONS SANCTUARY</div>
+
+                    <div className="flex flex-col items-center text-center space-y-6 my-auto">
+                        {/* Steaming Coffee Cup Animation */}
+                        <div className="relative w-32 h-32 flex items-center justify-center">
+                            {/* Animated Rising Steam Waves */}
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex space-x-2 pointer-events-none">
+                                <div className="w-1.5 h-10 bg-cream/40 rounded-full blur-[2px] animate-steam" style={{ animationDelay: '0s' }} />
+                                <div className="w-1.5 h-12 bg-terracotta/60 rounded-full blur-[2px] animate-steam" style={{ animationDelay: '0.4s' }} />
+                                <div className="w-1.5 h-10 bg-cream/40 rounded-full blur-[2px] animate-steam" style={{ animationDelay: '0.8s' }} />
+                            </div>
+
+                            {/* Ceramic Coffee Cup & Saucer */}
+                            <div className="relative z-10 flex flex-col items-center">
+                                <div className="relative w-20 h-16 bg-cream/15 border-2 border-cream/30 rounded-b-3xl shadow-2xl flex items-center justify-center backdrop-blur-md">
+                                    <div className="w-16 h-4 bg-walnut/90 rounded-full border border-terracotta/40" />
+                                    <div className="absolute -right-3 top-2 w-4 h-8 border-2 border-cream/30 rounded-r-full" />
+                                </div>
+                                <div className="w-24 h-2.5 bg-cream/20 rounded-full border border-cream/30 mt-1 shadow-lg" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h1 className="font-serif text-4xl md:text-6xl font-light tracking-[0.2em] uppercase text-cream">VIVEVONS</h1>
+                            <p className="font-hand text-2xl text-terracotta">“Brewing your second chance...”</p>
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-xs space-y-3">
+                        <div className="flex justify-between items-center text-xs font-mono text-sage">
+                            <span>BREWING EXPERIENCE</span>
+                            <span>{Math.min(progress, 100)}%</span>
+                        </div>
+                        <div className="h-1 w-full bg-cream/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-terracotta transition-all duration-200" style={{ width: `${Math.min(progress, 100)}%` }} />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- NATIVE WEB AUDIO AMBIENCE ---
+        let audioCtx = null;
+        let noiseNode = null;
+        let gainNode = null;
+
+        const toggleAudioAmbience = (enable) => {
+            if (enable) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const bufferSize = audioCtx.sampleRate * 2;
+                    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+                    noiseNode = audioCtx.createBufferSource();
+                    noiseNode.buffer = noiseBuffer;
+                    noiseNode.loop = true;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 400;
+
+                    gainNode = audioCtx.createGain();
+                    gainNode.gain.value = 0.04;
+
+                    noiseNode.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    noiseNode.start(0);
+                    return true;
+                } catch(e) { return false; }
+            } else {
+                if (audioCtx) {
+                    try { audioCtx.close(); } catch(e){}
+                    audioCtx = null;
+                }
+                return false;
+            }
+        };
+
+        // --- PUBLIC COMPONENTS ---
+        const CustomCursor = () => {
+            const [pos, setPos] = useState({ x: -100, y: -100 });
+            useEffect(() => {
+                const h = (e) => setPos({ x: e.clientX, y: e.clientY });
+                window.addEventListener('mousemove', h);
+                return () => window.removeEventListener('mousemove', h);
+            }, []);
+            return (
+                <div className="fixed top-0 left-0 pointer-events-none z-[9999] w-3 h-3 bg-terracotta rounded-full mix-blend-difference hidden md:block" style={{ transform: `translate3d(${pos.x - 6}px, ${pos.y - 6}px, 0)` }} />
+            );
+        };
+
+        const PublicNavbar = ({ onOpenReservation, isAudioOn, onToggleAudio }) => {
+            const [scrolled, setScrolled] = useState(false);
+            useEffect(() => {
+                const h = () => setScrolled(window.scrollY > 40);
+                window.addEventListener('scroll', h);
+                return () => window.removeEventListener('scroll', h);
+            }, []);
+
+            return (
+                <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-offwhite/95 backdrop-blur-md shadow-sm border-b border-olive/10 py-3 text-olive' : 'bg-gradient-to-b from-black/70 via-black/30 to-transparent py-5 text-cream'}`}>
+                    <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
+                        <a href="#" className="flex items-center space-x-3">
+                            <img src="logo.jpg" alt="VIVEVONS Logo" className="w-10 h-10 rounded-full border border-cream/30 object-cover" />
+                            <div className="flex flex-col">
+                                <span className="font-serif tracking-[0.2em] font-light text-xl leading-none">VIVEVONS</span>
+                                <span className="font-sans text-[9px] tracking-[0.25em] uppercase opacity-80">More Than Just a Café</span>
+                            </div>
+                        </a>
+
+                        <nav className="hidden lg:flex items-center space-x-8 text-xs font-sans tracking-[0.2em]">
+                            <a href="#story" className="hover-underline-animation">OUR STORY</a>
+                            <a href="#five-tables" className="hover-underline-animation">FIVE TABLES</a>
+                            <a href="#menu" className="hover-underline-animation">MENU CHAPTERS</a>
+                            <a href="#idea-wall" className="hover-underline-animation">IDEA WALL</a>
+                            <a href="#gallery" className="hover-underline-animation">GALLERY</a>
+                            <a href="#location" className="hover-underline-animation">LOCATION</a>
+                        </nav>
+
+                        <div className="flex items-center space-x-3">
+                            <button
+                                onClick={onToggleAudio}
+                                className={`px-3 py-1.5 rounded-full text-[10px] font-mono tracking-wider uppercase border transition-all ${
+                                    isAudioOn ? 'bg-terracotta text-cream border-terracotta' : 'bg-cream/10 border-cream/30 text-current'
+                                }`}
+                                title="Toggle subtle café room ambience audio"
+                            >
+                                {isAudioOn ? '☕ AMBIENCE ON' : '☕ AMBIENCE OFF'}
+                            </button>
+
+                            <button onClick={onOpenReservation} className="px-5 py-2 rounded-full text-xs font-sans tracking-widest uppercase bg-terracotta text-cream hover:bg-terracotta-dark shadow">
+                                RESERVE
+                            </button>
+                            <a href="#admin" className="px-3 py-1.5 rounded-full text-[10px] font-mono tracking-widest uppercase border border-cream/30 hover:bg-cream hover:text-espresso text-current">
+                                ADMIN CMS
+                            </a>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        const PersonalizationBar = ({ selected, onSelect }) => {
+            const options = [
+                { id: 'coffee', label: '☕ COFFEE', note: '“Let’s start with coffee. A fresh cup is waiting.”' },
+                { id: 'idea', label: '💭 AN IDEA', note: '“Then you came to the right place. Every big thing starts with a thought.”' },
+                { id: 'people', label: '👥 PEOPLE', note: '“Some conversations change everything.”' },
+                { id: 'beginning', label: '🌱 A NEW BEGINNING', note: '“You don’t have to stay who you were yesterday.”' },
+                { id: 'curious', label: '✨ JUST CURIOUS', note: '“Curiosity is the first chapter of discovery.”' },
+            ];
+
+            const currentObj = options.find(o => o.id === selected) || options[0];
+
+            return (
+                <div className="bg-olive text-cream py-6 border-y border-cream/10 shadow-inner">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center space-x-2">
+                            <span className="font-mono text-xs text-sage uppercase tracking-widest">WHAT BROUGHT YOU HERE TODAY?</span>
+                        </div>
+
+                        <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1">
+                            {options.map(opt => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => onSelect(opt.id)}
+                                    className={`px-4 py-2 rounded-full text-xs font-sans tracking-wider uppercase transition-all whitespace-nowrap ${
+                                        selected === opt.id
+                                            ? 'bg-terracotta text-cream font-semibold shadow-md'
+                                            : 'bg-cream/10 text-cream/70 hover:bg-cream/20'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="text-center font-hand text-2xl text-terracotta pt-3">
+                        {currentObj.note}
+                    </div>
+                </div>
+            );
+        };
+
+        const InteractiveHero = ({ onOpenReservation }) => {
+            const words = ['IDEA', 'TRY', 'FAIL', 'LEARN', 'BEGIN', 'VIVEVONS'];
+            const [wordIndex, setWordIndex] = useState(0);
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setWordIndex((prev) => (prev + 1) % words.length);
+                }, 1800);
+                return () => clearInterval(interval);
+            }, []);
+
+            return (
+                <section className="relative w-full h-screen min-h-[720px] flex items-center justify-center overflow-hidden bg-espresso">
+                    <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2000&auto=format&fit=crop" alt="VIVEVONS Interior" className="absolute inset-0 w-full h-full object-cover filter brightness-75 contrast-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-espresso via-espresso/60 to-espresso/30" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-espresso/70 via-transparent to-espresso/70" />
+
+                    <div className="relative z-10 text-center text-cream max-w-4xl px-6 pt-16 flex flex-col items-center">
+                        <div className="inline-flex items-center space-x-3 px-5 py-2 rounded-full bg-cream/10 border border-cream/20 backdrop-blur-md mb-8">
+                            <span className="font-mono text-xs text-sage tracking-widest uppercase">STEAM REVEALS:</span>
+                            <span className="font-hand text-2xl text-terracotta font-semibold tracking-wider transition-all duration-500">
+                                {words[wordIndex]}
+                            </span>
+                        </div>
+
+                        <h1 className="font-serif text-6xl md:text-8xl lg:text-9xl tracking-[0.15em] uppercase font-light text-cream mb-2 drop-shadow-xl">
+                            VIVEVONS
+                        </h1>
+
+                        <p className="font-serif text-2xl md:text-3xl text-terracotta italic tracking-[0.2em] font-normal mb-4">
+                            THE CAFÉ OF SECOND CHANCES
+                        </p>
+
+                        <div className="bg-cream/15 backdrop-blur-md p-4 rounded-2xl border border-cream/20 max-w-md mb-8">
+                            <p className="font-hand text-2xl text-cream tracking-wide">
+                                “Today, I had another idea.”
+                            </p>
+                        </div>
+
+                        <p className="font-sans text-sm md:text-base text-cream/80 max-w-xl mx-auto mb-10 font-light leading-relaxed">
+                            “More Than Just a Café.”
+                            <span className="block text-cream/60 text-xs md:text-sm mt-1 italic">
+                                A place for unfinished dreams and fresh beginnings.
+                            </span>
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-md">
+                            <a href="#story" className="px-8 py-4 bg-terracotta text-cream rounded-full text-xs font-sans tracking-[0.25em] uppercase font-semibold shadow-xl hover:bg-terracotta-dark transition-all">
+                                EXPLORE THE STORY
+                            </a>
+                            <button onClick={onOpenReservation} className="px-8 py-4 bg-cream/10 text-cream border border-cream/30 rounded-full text-xs font-sans tracking-[0.25em] uppercase font-semibold hover:bg-cream hover:text-espresso transition-all">
+                                BOOK A TABLE
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const SketchToRealitySection = () => {
+            const [sliderPos, setSliderPos] = useState(50);
+
+            return (
+                <section className="py-24 lg:py-36 bg-offwhite text-espresso relative overflow-hidden">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="text-center max-w-3xl mx-auto mb-16">
+                            <span className="text-terracotta text-xs tracking-[0.3em] font-sans uppercase block mb-3">SECTION 01 — THE TRANSFORMATION</span>
+                            <h2 className="font-serif text-4xl md:text-6xl font-light text-olive uppercase">
+                                EVERY PLACE STARTS WITH <span className="text-walnut italic">AN IDEA.</span>
+                            </h2>
+                            <p className="font-serif text-lg text-walnut italic mt-2">
+                                Move your cursor across the canvas to transform notebook sketch into reality.
+                            </p>
+                        </div>
+
+                        <div
+                            className="relative w-full h-[480px] md:h-[560px] rounded-3xl overflow-hidden border border-olive/20 shadow-2xl cursor-col-resize select-none"
+                            onMouseMove={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                                setSliderPos((x / rect.width) * 100);
+                            }}
+                        >
+                            <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1600&auto=format&fit=crop" alt="Real Cafe" className="absolute inset-0 w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-espresso/20" />
+                            <span className="absolute bottom-6 right-6 bg-olive/90 text-cream px-4 py-1.5 rounded-full text-xs font-mono uppercase tracking-widest">
+                                REALITY: CAFÉ SANCTUARY
+                            </span>
+
+                            <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
+                                <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1600&auto=format&fit=crop" alt="Notebook Sketch" className="absolute inset-0 w-full h-full object-cover filter sepia-50 contrast-125 brightness-90" />
+                                <div className="absolute inset-0 bg-cream/30 mix-blend-color" />
+                                <span className="absolute bottom-6 left-6 bg-terracotta text-cream px-4 py-1.5 rounded-full text-xs font-mono uppercase tracking-widest">
+                                    NOTEBOOK SKETCH
+                                </span>
+                            </div>
+
+                            <div className="absolute top-0 bottom-0 w-1 bg-terracotta shadow-2xl z-20" style={{ left: `${sliderPos}%` }}>
+                                <div className="w-8 h-8 rounded-full bg-terracotta text-cream flex items-center justify-center font-mono text-xs shadow-xl -ml-3.5 top-1/2 relative -translate-y-1/2">
+                                    ↔
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const InteractiveTimeline = () => {
+            const steps = [
+                { num: '01', title: 'FAILED IDEA', tag: 'DRAFT 01', note: '“A mobile app for collectors that nobody downloaded in 2024.”', lesson: 'Lesson: Build places where people can feel warmth.' },
+                { num: '02', title: 'LESSON LEARNED', tag: 'DRAFT 02', note: '“Failure is not the end; it is simply raw material.”', lesson: 'Lesson: Every notebook page is patient enough.' },
+                { num: '03', title: 'ANOTHER IDEA', tag: 'DRAFT 03', note: '“What if we built a sanctuary for original ideas and specialty coffee?”', lesson: 'Lesson: Give unfinished dreams a physical home.' },
+                { num: '04', title: 'ONE MORE TRY', tag: 'DRAFT 04', note: '“5 tables, ethical beans, quiet jazz, and a physical signature wall.”', lesson: 'Lesson: Start before you feel completely ready.' },
+                { num: '05', title: 'VIVEVONS', tag: 'DESTINATION', note: '“More Than Just a Café. A place for fresh beginnings.”', lesson: 'Result: VIVEVONS is open.' },
+            ];
+
+            const [activeIdx, setActiveIdx] = useState(0);
+            const currentStep = steps[activeIdx];
+
+            return (
+                <section className="py-24 bg-olive text-cream relative">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="text-center max-w-3xl mx-auto mb-16">
+                            <span className="text-sage text-xs tracking-[0.3em] uppercase block mb-2">THE EVOLUTION JOURNEY</span>
+                            <h2 className="font-serif text-4xl md:text-6xl font-light uppercase">FAILURE → IDEA → <span className="text-terracotta italic">VIVEVONS.</span></h2>
+                        </div>
+
+                        <div className="flex overflow-x-auto justify-start md:justify-center space-x-3 mb-12 pb-4 no-scrollbar">
+                            {steps.map((s, idx) => (
+                                <button
+                                    key={s.num}
+                                    onClick={() => setActiveIdx(idx)}
+                                    className={`px-5 py-3 rounded-2xl text-xs font-mono uppercase tracking-wider transition-all whitespace-nowrap flex items-center space-x-2 ${
+                                        activeIdx === idx
+                                            ? 'bg-terracotta text-cream shadow-xl scale-105'
+                                            : 'bg-olive-dark text-cream/70 hover:bg-cream/10'
+                                    }`}
+                                >
+                                    <span>{s.num}</span>
+                                    <span>{s.title}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="bg-olive-dark p-8 md:p-12 rounded-3xl border border-cream/15 shadow-2xl relative max-w-3xl mx-auto text-center space-y-6">
+                            <span className="font-mono text-xs text-terracotta uppercase tracking-widest">{currentStep.tag} — STEP {currentStep.num} OF 05</span>
+                            <h3 className="font-serif text-4xl md:text-5xl uppercase text-cream font-light">{currentStep.title}</h3>
+                            <p className="font-hand text-3xl md:text-4xl text-cream/90 italic">“{currentStep.note}”</p>
+                            <div className="p-4 rounded-xl bg-cream/10 text-sage text-xs font-mono max-w-md mx-auto border border-cream/10">
+                                {currentStep.lesson}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const IdeaDesk = () => {
+            const [activeObject, setActiveObject] = useState(null);
+
+            const objects = [
+                { id: 'notebook', name: '📔 Notebook', title: "What's on your mind?", text: "Paper is patient enough to hold whatever you dare to write.", action: "READ STORY", target: "#story" },
+                { id: 'coffee', name: '☕ Coffee Cup', title: "Take a pause.", text: "Ethically sourced small-batch beans roasted for slow mornings.", action: "VIEW MENU", target: "#menu" },
+                { id: 'paper', name: '📝 Paper Note', title: "Leave an idea.", text: "Pin your spark to our community board.", action: "SHARE IDEA", target: "#idea-wall" },
+                { id: 'camera', name: '📷 Camera', title: "See VIVEVONS.", text: "Explore the visual editorial chapters of our space.", action: "VIEW GALLERY", target: "#gallery" },
+            ];
+
+            return (
+                <section className="py-24 bg-cream text-espresso relative">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="text-center max-w-3xl mx-auto mb-16">
+                            <span className="text-terracotta text-xs tracking-[0.3em] uppercase block mb-2">INTERACTIVE DISCOVERY</span>
+                            <h2 className="font-serif text-4xl md:text-6xl font-light text-olive uppercase">THE VIVEVONS <span className="text-walnut italic">IDEA DESK.</span></h2>
+                            <p className="font-sans text-xs text-espresso/70 mt-2">Click an object on the desk to explore its secret chapter.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {objects.map(obj => (
+                                <div
+                                    key={obj.id}
+                                    onClick={() => setActiveObject(obj)}
+                                    className={`p-8 rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[260px] group ${
+                                        activeObject?.id === obj.id
+                                            ? 'bg-olive text-cream border-olive shadow-2xl scale-105'
+                                            : 'bg-offwhite text-olive border-olive/15 hover:bg-cream-dark'
+                                    }`}
+                                >
+                                    <div className="text-4xl mb-4">{obj.name.split(' ')[0]}</div>
+                                    <div>
+                                        <h3 className="font-serif text-2xl uppercase mb-2">{obj.title}</h3>
+                                        <p className="font-sans text-xs opacity-80 font-light">{obj.text}</p>
+                                    </div>
+                                    <a
+                                        href={obj.target}
+                                        className={`mt-6 py-2 px-4 rounded-full text-[10px] font-mono uppercase tracking-widest text-center border transition-all ${
+                                            activeObject?.id === obj.id ? 'bg-terracotta text-cream border-terracotta' : 'bg-olive text-cream border-olive'
+                                        }`}
+                                    >
+                                        {obj.action} →
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const BrandStory = () => {
+            return (
+                <section id="story" className="py-24 bg-offwhite text-espresso">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="flex flex-col mb-16">
+                            <span className="text-terracotta text-xs tracking-[0.3em] font-sans uppercase mb-2">OUR ORIGIN & PHILOSOPHY</span>
+                            <h2 className="font-serif text-4xl md:text-6xl font-light text-olive uppercase">EVERY IDEA <span className="text-walnut italic">STARTS SOMEWHERE.</span></h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                            <div className="lg:col-span-7 space-y-6">
+                                <p className="font-serif text-2xl text-olive italic border-l-2 border-terracotta pl-6">“Once, there was a boy with a mind full of ideas.”</p>
+                                <p className="font-sans text-base text-espresso/80 leading-relaxed font-light">He dreamed of doing many things. Some worked. Some didn’t. Some never made it past his notebook.</p>
+                                <div className="bg-cream/60 p-6 rounded-2xl border border-olive/10 text-olive font-serif italic text-lg">“But every failure left him with something new — a lesson, a different perspective, or another idea.”</div>
+                                <p className="font-sans text-base text-espresso/80 leading-relaxed font-light">One day, he decided to turn his little dream into a place of its own. A place where coffee meets creativity, where conversations become ideas, and where unfinished dreams are always welcome.</p>
+                                <p className="font-serif text-2xl text-olive">That place became <span className="underline decoration-terracotta underline-offset-8">VIVEVONS</span>.</p>
+                            </div>
+                            <div className="lg:col-span-5">
+                                <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop" alt="Notebook" className="w-full h-96 object-cover rounded-2xl shadow-xl" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const FiveTables = () => {
+            const [tables, setTables] = useState([]);
+            const [activeId, setActiveId] = useState('t1');
+
+            useEffect(() => {
+                const update = () => setTables(db.getTables());
+                update();
+                return db.subscribe(update);
+            }, []);
+
+            const activeTable = tables.find(t => t.id === activeId) || tables[0] || {};
+
+            return (
+                <section id="five-tables" className="py-24 bg-offwhite text-espresso">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
+                            <div>
+                                <span className="text-terracotta text-xs tracking-[0.3em] font-sans uppercase mb-2">THE VIVEVONS EXPERIENCE</span>
+                                <h2 className="font-serif text-4xl md:text-6xl font-light text-olive uppercase">FIVE TABLES. <span className="text-walnut italic">FIVE CHAPTERS.</span></h2>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-[500px]">
+                            <div className="lg:col-span-5 space-y-3">
+                                {tables.map(t => (
+                                    <div key={t.id} onClick={() => setActiveId(t.id)} className={`cursor-pointer p-5 rounded-2xl border transition-all ${activeId === t.id ? 'bg-olive text-cream border-olive shadow-xl' : 'bg-cream/40 text-olive'}`}>
+                                        <div className="flex items-center space-x-4">
+                                            <span className="font-serif text-2xl text-terracotta">{t.num}</span>
+                                            <div>
+                                                <h3 className="font-serif text-lg uppercase">{t.title}</h3>
+                                                <p className="font-sans text-xs opacity-75">{t.sub}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="lg:col-span-7 relative">
+                                {activeTable.title && (
+                                    <div className="w-full h-full bg-cream rounded-3xl overflow-hidden border border-olive/15 shadow-2xl flex flex-col justify-between p-8 relative text-cream">
+                                        <img src={activeTable.img} alt={activeTable.title} className="absolute inset-0 w-full h-full object-cover filter brightness-75 z-0" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-espresso via-espresso/60 to-transparent z-0" />
+                                        <div className="relative z-10 space-y-4 pt-32">
+                                            <h3 className="font-serif text-3xl uppercase">{activeTable.title}</h3>
+                                            <p className="font-serif text-lg italic text-cream/90">{activeTable.quote}</p>
+                                            <p className="font-sans text-xs text-cream/80 max-w-xl">{activeTable.desc}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const PublicMenu = () => {
+            const [items, setItems] = useState([]);
+            const [cat, setCat] = useState('all');
+
+            useEffect(() => {
+                const update = () => setItems(db.getMenuItems(true));
+                update();
+                return db.subscribe(update);
+            }, []);
+
+            const filtered = items.filter(i => cat === 'all' || i.category === cat);
+
+            return (
+                <section id="menu" className="py-24 bg-cream text-espresso">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="text-center max-w-3xl mx-auto mb-16">
+                            <span className="text-terracotta text-xs tracking-[0.3em] uppercase block mb-2">DYNAMIC CAFÉ MENU</span>
+                            <h2 className="font-serif text-4xl md:text-6xl font-light text-olive uppercase">GOOD FOOD. GREAT COFFEE. <span className="text-walnut italic">BIG IDEAS.</span></h2>
+                        </div>
+
+                        <div className="flex overflow-x-auto pb-4 space-x-2 mb-10 no-scrollbar justify-start md:justify-center">
+                            {['all', 'coffee', 'tea', 'cold-drinks', 'pizzas', 'burgers', 'pasta', 'snacks', 'signatures'].map(c => (
+                                <button key={c} onClick={() => setCat(c)} className={`px-4 py-2 rounded-full text-xs font-sans tracking-widest uppercase ${cat === c ? 'bg-olive text-cream font-semibold' : 'bg-offwhite text-espresso/70'}`}>
+                                    {c.replace('-', ' ')}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {filtered.map(item => (
+                                <div key={item.id} className="bg-offwhite rounded-2xl p-6 border border-olive/10 shadow-sm flex flex-col sm:flex-row gap-6">
+                                    {item.image && <img src={item.image} alt={item.creativeName} className="w-full sm:w-28 h-28 rounded-xl object-cover" />}
+                                    <div className="flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-baseline mb-1 border-b border-olive/10 pb-2">
+                                                <h3 className="font-serif text-xl text-olive font-medium uppercase">{item.creativeName}</h3>
+                                                <span className="font-serif text-xl text-terracotta font-medium">{item.price}</span>
+                                            </div>
+                                            <div className="my-1.5 flex items-center space-x-2">
+                                                <span className="font-mono text-[9px] text-walnut bg-cream px-2 py-0.5 rounded uppercase">ORDER AS: {item.normalName}</span>
+                                                {item.availability === 'SOLD_OUT' && (
+                                                    <span className="font-mono text-[9px] bg-terracotta text-cream px-2 py-0.5 rounded font-semibold uppercase">SOLD OUT</span>
+                                                )}
+                                            </div>
+                                            <p className="font-sans text-xs text-espresso/70 font-light">{item.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const IdeaWall = () => {
+            const [ideas, setIdeas] = useState([]);
+            const [name, setName] = useState('');
+            const [title, setTitle] = useState('');
+            const [msg, setMsg] = useState('');
+            const [showModal, setShowModal] = useState(false);
+
+            useEffect(() => {
+                const update = () => setIdeas(db.getIdeas('APPROVED'));
+                update();
+                return db.subscribe(update);
+            }, []);
+
+            const handleAdd = (e) => {
+                e.preventDefault();
+                if (!name || !title || !msg) return;
+                db.submitIdea({ author: name, title, message: msg, category: 'dream', color: 'cream' });
+                triggerConfetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+                setShowModal(false);
+                setName(''); setTitle(''); setMsg('');
+            };
+
+            return (
+                <section id="idea-wall" className="py-24 bg-offwhite text-espresso">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
+                            <div>
+                                <span className="text-terracotta text-xs tracking-[0.3em] uppercase block mb-2">COMMUNITY BOARD</span>
+                                <h2 className="font-serif text-4xl md:text-6xl font-light text-olive uppercase">WHAT’S YOUR <span className="text-walnut italic">NEXT IDEA?</span></h2>
+                            </div>
+                            <button onClick={() => setShowModal(true)} className="mt-6 md:mt-0 px-8 py-4 bg-terracotta text-cream rounded-full font-sans text-xs tracking-widest uppercase font-semibold">
+                                LEAVE AN IDEA
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {ideas.map(item => (
+                                <div key={item.id} className="p-7 rounded-2xl bg-cream border border-olive/15 shadow-md flex flex-col justify-between min-h-[200px]">
+                                    <div>
+                                        <h3 className="font-serif text-2xl text-olive font-light mb-2">{item.title}</h3>
+                                        <p className="font-sans text-xs text-espresso/80 font-light">“{item.message || item.msg}”</p>
+                                    </div>
+                                    <div className="pt-4 border-t border-olive/10 flex justify-between items-center text-xs">
+                                        <span className="font-sans font-semibold">— {item.author || item.name}</span>
+                                        <span className="font-mono text-terracotta">♥ {item.likes}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {showModal && (
+                        <div className="fixed inset-0 z-50 bg-espresso/80 backdrop-blur-md flex items-center justify-center p-4">
+                            <div className="bg-offwhite max-w-md w-full rounded-3xl p-8 border border-olive/20 shadow-2xl relative space-y-4">
+                                <h3 className="font-serif text-3xl text-olive uppercase">SHARE YOUR IDEA</h3>
+                                <form onSubmit={handleAdd} className="space-y-4">
+                                    <input type="text" placeholder="Your Name" value={name} onChange={e => setName(e.target.value)} className="w-full p-3 rounded-xl bg-cream border text-xs" required />
+                                    <input type="text" placeholder="Idea Title" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-3 rounded-xl bg-cream border text-xs" required />
+                                    <textarea placeholder="Your story or idea..." value={msg} onChange={e => setMsg(e.target.value)} className="w-full p-3 rounded-xl bg-cream border text-xs" rows="3" required />
+                                    <div className="flex gap-2">
+                                        <button type="submit" className="flex-1 py-3 bg-terracotta text-cream rounded-xl text-xs uppercase tracking-widest">SUBMIT IDEA</button>
+                                        <button type="button" onClick={() => setShowModal(false)} className="py-3 px-4 bg-cream text-espresso rounded-xl text-xs">CANCEL</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </section>
+            );
+        };
+
+        const Gallery = () => {
+            const [images, setImages] = useState([]);
+            const [activeImg, setActiveImg] = useState(null);
+
+            useEffect(() => {
+                const update = () => setImages(db.getGallery(true));
+                update();
+                return db.subscribe(update);
+            }, []);
+
+            return (
+                <section id="gallery" className="py-24 bg-cream text-espresso">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="text-center max-w-3xl mx-auto mb-16">
+                            <span className="text-terracotta text-xs tracking-[0.3em] uppercase block mb-2">EDITORIAL GALLERY</span>
+                            <h2 className="font-serif text-4xl md:text-6xl font-light text-olive uppercase">VISUAL <span className="text-walnut italic">CHAPTERS.</span></h2>
+                        </div>
+
+                        <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+                            {images.map(item => (
+                                <div key={item.id} onClick={() => setActiveImg(item)} className="relative overflow-hidden rounded-2xl border border-olive/10 shadow-md group cursor-pointer bg-offwhite break-inside-avoid">
+                                    <img src={item.image} alt={item.title} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <div className="absolute inset-0 bg-espresso/80 opacity-0 group-hover:opacity-100 transition-opacity p-6 flex flex-col justify-end text-cream">
+                                        <h3 className="font-serif text-2xl font-light uppercase">{item.title}</h3>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {activeImg && (
+                        <div className="fixed inset-0 z-50 bg-espresso/95 backdrop-blur-xl flex items-center justify-center p-4">
+                            <button onClick={() => setActiveImg(null)} className="absolute top-6 right-6 p-3 text-cream bg-cream/10 rounded-full">✕</button>
+                            <img src={activeImg.image} alt={activeImg.title} className="max-h-[80vh] max-w-[90vw] object-contain rounded-2xl border border-cream/20 shadow-2xl" />
+                        </div>
+                    )}
+                </section>
+            );
+        };
+
+        const TakeABreath = () => {
+            const [zenMode, setZenMode] = useState(false);
+            const [countdown, setCountdown] = useState(10);
+
+            useEffect(() => {
+                let timer;
+                if (zenMode && countdown > 0) {
+                    timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+                } else if (zenMode && countdown === 0) {
+                    setZenMode(false);
+                    setCountdown(10);
+                }
+                return () => clearTimeout(timer);
+            }, [zenMode, countdown]);
+
+            return (
+                <section className="py-24 bg-espresso text-cream text-center relative overflow-hidden">
+                    <div className="max-w-3xl mx-auto px-6 relative z-10 space-y-6">
+                        {!zenMode ? (
+                            <>
+                                <span className="font-mono text-xs text-sage uppercase tracking-[0.3em]">SANCTUARY RESET</span>
+                                <h2 className="font-serif text-4xl md:text-6xl font-light text-cream uppercase">
+                                    TAKE A BREATH.
+                                </h2>
+                                <p className="font-serif text-xl italic text-terracotta font-light">
+                                    “Maybe you don’t need another answer. Maybe you just need a place to think.”
+                                </p>
+                                <button
+                                    onClick={() => setZenMode(true)}
+                                    className="px-8 py-4 bg-cream/10 border border-cream/30 text-cream rounded-full text-xs font-sans tracking-[0.25em] uppercase font-semibold hover:bg-cream hover:text-espresso transition-all"
+                                >
+                                    [ TAKE A MOMENT ]
+                                </button>
+                            </>
+                        ) : (
+                            <div className="py-12 space-y-6 animate-fade-in">
+                                <div className="w-16 h-16 rounded-full border border-terracotta/40 mx-auto flex items-center justify-center animate-ping">
+                                    <div className="w-8 h-8 rounded-full bg-terracotta" />
+                                </div>
+                                <h3 className="font-serif text-3xl text-cream font-light uppercase">RESTING FOR {countdown} SECONDS...</h3>
+                                <p className="font-sans text-xs text-sage">No notifications. No rush. Breathe slowly.</p>
+                                <button onClick={() => setZenMode(false)} className="px-6 py-2 bg-cream text-espresso rounded-full text-[10px] font-mono uppercase">
+                                    [ EXIT MOMENT ]
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            );
+        };
+
+        const ConversationalReservation = () => {
+            const [guests, setGuests] = useState(2);
+            const [tablePref, setTablePref] = useState('02 — THE NOTEBOOK');
+            const [name, setName] = useState('');
+            const [phone, setPhone] = useState('');
+            const [email, setEmail] = useState('');
+            const [date, setDate] = useState('2026-10-01');
+            const [time, setTime] = useState('10:30');
+            const [refCode, setRefCode] = useState(null);
+
+            const handleBooking = (e) => {
+                e.preventDefault();
+                if (!name || !email) return;
+                const newRes = db.submitReservation({
+                    customerName: name,
+                    phone,
+                    email,
+                    date,
+                    time,
+                    guests,
+                    tablePreference: tablePref
+                });
+                setRefCode(newRes.bookingRef);
+                triggerConfetti({ particleCount: 90, spread: 70, origin: { y: 0.5 } });
+            };
+
+            return (
+                <section id="reservation" className="py-24 bg-cream text-espresso">
+                    <div className="max-w-4xl mx-auto px-6">
+                        <div className="bg-offwhite rounded-3xl p-8 md:p-12 border border-olive/20 shadow-2xl space-y-8">
+                            {!refCode ? (
+                                <form onSubmit={handleBooking} className="space-y-8">
+                                    <div className="text-center space-y-2">
+                                        <span className="font-mono text-xs text-terracotta uppercase tracking-[0.3em]">HOSPITALITY RESERVATION</span>
+                                        <h2 className="font-serif text-4xl md:text-5xl font-light text-olive uppercase">SAVE A TABLE FOR YOURSELF</h2>
+                                    </div>
+
+                                    <div>
+                                        <label className="block font-serif text-xl text-olive mb-3">1. Who are you bringing?</label>
+                                        <div className="flex gap-3">
+                                            {[1, 2, 3, 4, 5].map(g => (
+                                                <button
+                                                    key={g}
+                                                    type="button"
+                                                    onClick={() => setGuests(g)}
+                                                    className={`w-12 h-12 rounded-2xl font-mono text-sm border transition-all ${
+                                                        guests === g ? 'bg-olive text-cream border-olive font-bold' : 'bg-cream text-espresso border-olive/20'
+                                                    }`}
+                                                >
+                                                    {g}{g === 5 && '+'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block font-serif text-xl text-olive mb-3">2. What kind of moment are you looking for?</label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {[
+                                                '01 — THE FIRST IDEA',
+                                                '02 — THE NOTEBOOK',
+                                                '03 — THE PAUSE',
+                                                '04 — THE CONVERSATION',
+                                                '05 — THE BEGINNING AGAIN'
+                                            ].map(pref => (
+                                                <button
+                                                    key={pref}
+                                                    type="button"
+                                                    onClick={() => setTablePref(pref)}
+                                                    className={`p-4 rounded-2xl text-left font-serif text-sm border transition-all ${
+                                                        tablePref === pref ? 'bg-terracotta text-cream border-terracotta font-semibold' : 'bg-cream text-espresso border-olive/20'
+                                                    }`}
+                                                >
+                                                    {pref}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <input type="text" placeholder="Your Name *" value={name} onChange={e => setName(e.target.value)} className="p-3.5 rounded-xl bg-cream border text-xs" required />
+                                        <input type="tel" placeholder="Phone *" value={phone} onChange={e => setPhone(e.target.value)} className="p-3.5 rounded-xl bg-cream border text-xs" required />
+                                        <input type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} className="p-3.5 rounded-xl bg-cream border text-xs" required />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="p-3.5 rounded-xl bg-cream border text-xs font-mono" />
+                                        <select value={time} onChange={e => setTime(e.target.value)} className="p-3.5 rounded-xl bg-cream border text-xs font-mono">
+                                            <option value="08:00">08:00 AM — Early Spark</option>
+                                            <option value="10:30">10:30 AM — Slow Morning</option>
+                                            <option value="14:00">02:00 PM — Midday Work</option>
+                                            <option value="18:30">06:30 PM — Sunset Conversation</option>
+                                        </select>
+                                    </div>
+
+                                    <button type="submit" className="w-full py-4 bg-olive text-cream rounded-full text-xs font-sans tracking-[0.25em] uppercase font-semibold shadow-xl">
+                                        SAVE MY TABLE NOW
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="text-center py-10 space-y-4">
+                                    <span className="font-mono text-xs text-terracotta uppercase">CONFIRMED — REF #{refCode}</span>
+                                    <h3 className="font-serif text-4xl text-olive uppercase">YOUR TABLE IS WAITING.</h3>
+                                    <p className="font-sans text-xs text-espresso/80">We have reserved {tablePref} for {guests} guest(s) on {date} at {time}.</p>
+                                    <button onClick={() => setRefCode(null)} className="px-8 py-3 bg-olive text-cream rounded-full text-xs uppercase">DONE</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const PublicLocation = () => {
+            const [contact, setContact] = useState(db.getContact());
+            const [hours, setHours] = useState(db.getHours());
+
+            useEffect(() => {
+                const update = () => {
+                    setContact(db.getContact());
+                    setHours(db.getHours());
+                };
+                update();
+                return db.subscribe(update);
+            }, []);
+
+            return (
+                <section id="location" className="py-24 lg:py-36 bg-olive text-cream relative">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12">
+                        <div className="text-center max-w-3xl mx-auto mb-16">
+                            <span className="text-terracotta text-xs tracking-[0.3em] uppercase block mb-3">VISIT THE SANCTUARY</span>
+                            <h2 className="font-serif text-4xl md:text-6xl font-light uppercase">FIND <span className="text-terracotta italic">VIVEVONS.</span></h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                            <div className="lg:col-span-5 bg-olive-dark p-8 md:p-12 rounded-3xl border border-cream/15 space-y-6">
+                                <div>
+                                    <span className="font-mono text-[10px] text-sage tracking-widest uppercase block mb-1">LOCATION</span>
+                                    <h3 className="font-serif text-xl font-light">{contact.address}</h3>
+                                    <p className="font-sans text-xs text-cream/70">{contact.city}</p>
+                                </div>
+
+                                <div>
+                                    <span className="font-mono text-[10px] text-sage tracking-widest uppercase block mb-1">OPENING HOURS</span>
+                                    <div className="space-y-1 pt-1">
+                                        {hours.map(h => (
+                                            <div key={h.dayName} className="flex justify-between text-xs font-sans">
+                                                <span className="text-cream/80">{h.dayName}:</span>
+                                                <span className="font-mono text-sage">{h.isClosed ? 'CLOSED' : `${h.openTime} – ${h.closeTime}`}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span className="font-mono text-[10px] text-sage tracking-widest uppercase block mb-1">GET IN TOUCH</span>
+                                    <p className="font-sans text-xs text-cream/90 font-mono font-semibold">{contact.phone}</p>
+                                    <p className="font-sans text-xs text-cream/70 font-mono">{contact.email}</p>
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <a href={contact.googleMapsUrl} target="_blank" className="flex-1 py-3 bg-terracotta text-cream rounded-full text-xs tracking-widest uppercase text-center font-semibold">GET DIRECTIONS</a>
+                                    <a href={`tel:${contact.phone}`} className="flex-1 py-3 bg-cream/10 border border-cream/20 text-cream rounded-full text-xs tracking-widest uppercase text-center">CALL VIVEVONS</a>
+                                </div>
+                            </div>
+
+                            <div className="lg:col-span-7 bg-cream rounded-3xl overflow-hidden border border-cream/20 relative min-h-[400px] flex items-center justify-center">
+                                <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1200&auto=format&fit=crop" alt="Map View" className="w-full h-full object-cover filter contrast-125 opacity-40 mix-blend-multiply" />
+                                <div className="relative z-10 bg-olive p-5 rounded-2xl border border-terracotta shadow-2xl flex items-center space-x-4">
+                                    <img src="logo.jpg" alt="VIVEVONS Pin" className="w-12 h-12 rounded-full border-2 border-terracotta object-cover" />
+                                    <div>
+                                        <h4 className="font-serif text-lg uppercase text-cream">VIVEVONS</h4>
+                                        <p className="font-sans text-[11px] text-sage">{contact.address}</p>
+                                        <p className="font-mono text-[10px] text-terracotta mt-0.5">{contact.phone}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const FinalClosingSection = ({ onOpenReservation }) => {
+            return (
+                <section className="py-32 bg-olive text-cream text-center relative overflow-hidden paper-grain">
+                    <div className="max-w-4xl mx-auto px-6 relative z-10 space-y-8">
+                        <span className="font-mono text-xs text-sage uppercase tracking-[0.3em]">FINAL CHAPTER</span>
+                        <h2 className="font-serif text-5xl md:text-8xl font-light uppercase tracking-wide leading-tight">
+                            YOU DON’T NEED <br />
+                            TO HAVE IT ALL <br />
+                            <span className="text-terracotta italic">FIGURED OUT.</span>
+                        </h2>
+                        <p className="font-hand text-4xl text-cream/90">“Just start.”</p>
+
+                        <div className="pt-6">
+                            <button
+                                onClick={onOpenReservation}
+                                className="px-12 py-5 bg-terracotta text-cream rounded-full font-sans text-xs tracking-[0.3em] uppercase font-semibold hover:bg-terracotta-dark shadow-2xl transition-all hover:scale-105"
+                            >
+                                [ COME FIND YOUR TABLE ]
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const PublicFooter = ({ onOpenReservation }) => {
+            return (
+                <footer className="bg-espresso text-cream pt-20 pb-12 border-t border-cream/10">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-12">
+                        <div className="flex flex-col lg:flex-row justify-between items-start gap-8 border-b border-cream/10 pb-12">
+                            <div className="space-y-3">
+                                <div className="flex items-center space-x-3">
+                                    <img src="logo.jpg" alt="VIVEVONS Logo" className="w-10 h-10 rounded-full border border-cream/30 object-cover" />
+                                    <span className="font-serif text-3xl font-light tracking-widest uppercase">VIVEVONS</span>
+                                </div>
+                                <p className="font-serif text-xl text-terracotta italic font-light">“More Than Just a Café.”</p>
+                                <p className="font-sans text-xs text-cream/70 max-w-sm">A place for unfinished dreams and fresh beginnings.</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <span className="font-mono text-xs text-sage uppercase tracking-widest block">RESERVATIONS & EVENTS</span>
+                                <button onClick={onOpenReservation} className="px-8 py-3.5 bg-terracotta text-cream rounded-full text-xs font-sans tracking-widest uppercase font-semibold">
+                                    BOOK A TABLE NOW
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-cream/50 pt-4">
+                            <div>© 2026 VIVEVONS. All rights reserved.</div>
+                            <a href="#" className="text-sage uppercase font-mono text-[10px]">BACK TO TOP ↑</a>
+                        </div>
+                    </div>
+                </footer>
+            );
+        };
+
+        // --- ADMIN CMS COMPONENT ---
+        const AdminCMS = () => {
+            const [currentUser, setCurrentUser] = useState(auth.getUser());
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [loginEmail, setLoginEmail] = useState('owner@vivevons.com');
+            const [loginPass, setLoginPass] = useState('vivevons2026');
+            const [loginErr, setLoginErr] = useState('');
+            const [toastMsg, setToastMsg] = useState(null);
+
+            const [menuList, setMenuList] = useState([]);
+            const [galleryList, setGalleryList] = useState([]);
+            const [ideasList, setIdeaList] = useState([]);
+            const [resList, setResList] = useState([]);
+            const [contactData, setContactData] = useState(db.getContact());
+            const [hoursList, setHoursList] = useState(db.getHours());
+            const [logsList, setLogsList] = useState(db.getLogs());
+
+            const [editMenu, setEditMenu] = useState(null);
+            const [editGallery, setEditGallery] = useState(null);
+
+            const refresh = () => {
+                setMenuList(db.getMenuItems(false));
+                setGalleryList(db.getGallery(false));
+                setIdeaList(db.getIdeas('ALL'));
+                setResList(db.getReservations('ALL'));
+                setContactData(db.getContact());
+                setHoursList(db.getHours());
+                setLogsList(db.getLogs());
+            };
+
+            useEffect(() => {
+                refresh();
+                return db.subscribe(refresh);
+            }, []);
+
+            const showToast = (msg) => {
+                setToastMsg(msg);
+                setTimeout(() => setToastMsg(null), 3000);
+            };
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                const res = auth.login(loginEmail, loginPass);
+                if (res.success) {
+                    setCurrentUser(res.user);
+                    setLoginErr('');
+                } else {
+                    setLoginErr(res.error);
+                }
+            };
+
+            const handleLogout = () => {
+                auth.logout();
+                setCurrentUser(null);
+            };
+
+            const handleSaveContact = (e) => {
+                e.preventDefault();
+                db.saveContact(contactData);
+                db.log(currentUser.email, currentUser.role, 'CONTACT_UPDATE', `Updated contact info (Phone: ${contactData.phone})`);
+                showToast('✓ Contact details saved & updated on public site!');
+            };
+
+            const handleSaveHours = (e) => {
+                e.preventDefault();
+                db.saveHours(hoursList);
+                db.log(currentUser.email, currentUser.role, 'HOURS_UPDATE', 'Updated opening hours.');
+                showToast('✓ Opening hours saved & updated on public site!');
+            };
+
+            if (!currentUser) {
+                return (
+                    <div className="min-h-screen bg-espresso flex items-center justify-center p-6 text-cream">
+                        <div className="max-w-md w-full bg-offwhite text-espresso rounded-3xl p-8 border border-cream/20 shadow-2xl space-y-6">
+                            <div className="text-center space-y-2">
+                                <img src="logo.jpg" alt="VIVEVONS Logo" className="w-20 h-20 rounded-full mx-auto border-2 border-terracotta object-cover" />
+                                <h2 className="font-serif text-3xl font-light text-olive uppercase">VIVEVONS ADMIN CMS</h2>
+                                <p className="font-sans text-xs text-walnut">Enter credentials to manage live website</p>
+                            </div>
+
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                {loginErr && <div className="p-3 bg-terracotta/10 border border-terracotta/30 text-terracotta text-xs rounded-xl">{loginErr}</div>}
+                                <div>
+                                    <label className="block text-xs uppercase text-walnut mb-1">Admin Email</label>
+                                    <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} className="w-full p-3 rounded-xl bg-cream border text-xs" required />
+                                </div>
+                                <div>
+                                    <label className="block text-xs uppercase text-walnut mb-1">Password</label>
+                                    <input type="password" value={loginPass} onChange={e => setLoginPass(e.target.value)} className="w-full p-3 rounded-xl bg-cream border text-xs" required />
+                                </div>
+                                <button type="submit" className="w-full py-4 bg-olive text-cream rounded-xl text-xs font-sans tracking-widest uppercase font-semibold">SIGN IN TO DASHBOARD</button>
+                            </form>
+
+                            <div className="text-[10px] font-mono text-sage text-center pt-2">
+                                Default Master Password: <span className="text-olive font-semibold">vivevons2026</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-[#FAF7F2] text-espresso flex">
+                    {toastMsg && (
+                        <div className="fixed top-20 right-8 z-50 bg-olive text-cream px-6 py-3 rounded-2xl shadow-2xl border border-terracotta text-xs font-sans font-medium animate-bounce">
+                            {toastMsg}
+                        </div>
+                    )}
+
+                    <aside className="w-64 bg-olive text-cream p-6 flex flex-col justify-between border-r border-olive-dark flex-shrink-0 hidden md:flex">
+                        <div className="space-y-6">
+                            <div className="flex items-center space-x-3 pb-6 border-b border-cream/10">
+                                <img src="logo.jpg" alt="Logo" className="w-10 h-10 rounded-full object-cover border border-cream/30" />
+                                <div>
+                                    <h2 className="font-serif text-xl tracking-widest text-cream uppercase">VIVEVONS</h2>
+                                    <span className="font-mono text-[9px] text-sage tracking-widest">CMS CONSOLE</span>
+                                </div>
+                            </div>
+
+                            <nav className="space-y-1 text-xs font-sans uppercase">
+                                {[
+                                    { id: 'dashboard', label: 'Dashboard' },
+                                    { id: 'menu', label: 'Menu Management' },
+                                    { id: 'gallery', label: 'Gallery Manager' },
+                                    { id: 'ideas', label: 'Idea Moderation' },
+                                    { id: 'reservations', label: 'Reservations' },
+                                    { id: 'contact', label: 'Contact Details' },
+                                    { id: 'logs', label: 'Activity Logs' }
+                                ].map(t => (
+                                    <button key={t.id} onClick={() => setActiveTab(t.id)} className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === t.id ? 'bg-terracotta text-cream font-semibold' : 'hover:bg-cream/10 text-cream/80'}`}>
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+
+                        <div className="pt-6 border-t border-cream/10 space-y-3">
+                            <div className="text-xs font-sans">
+                                <p className="font-semibold text-cream">{currentUser.fullName}</p>
+                                <span className="font-mono text-[10px] text-sage">{currentUser.role}</span>
+                            </div>
+                            <button onClick={handleLogout} className="w-full py-2.5 bg-cream/10 text-cream rounded-xl text-xs uppercase">LOGOUT</button>
+                        </div>
+                    </aside>
+
+                    <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto space-y-8 overflow-y-auto">
+                        <header className="flex justify-between items-center pb-6 border-b border-olive/10">
+                            <div>
+                                <span className="font-mono text-[10px] text-walnut uppercase tracking-widest">CMS CONTROL PANEL</span>
+                                <h1 className="font-serif text-3xl text-olive uppercase">{activeTab.toUpperCase()}</h1>
+                            </div>
+                            <a href="#" className="px-4 py-2 bg-olive text-cream rounded-full text-xs font-sans tracking-widest uppercase">
+                                VIEW PUBLIC SITE
+                            </a>
+                        </header>
+
+                        {/* TAB: DASHBOARD */}
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                    <div className="bg-cream p-6 rounded-2xl border border-olive/15 cursor-pointer" onClick={() => setActiveTab('menu')}>
+                                        <span className="font-mono text-[10px] text-walnut uppercase">MENU ITEMS</span>
+                                        <h3 className="font-serif text-4xl text-olive font-mono mt-2">{menuList.length}</h3>
+                                    </div>
+                                    <div className="bg-cream p-6 rounded-2xl border border-olive/15 cursor-pointer" onClick={() => setActiveTab('gallery')}>
+                                        <span className="font-mono text-[10px] text-walnut uppercase">GALLERY PHOTOS</span>
+                                        <h3 className="font-serif text-4xl text-olive font-mono mt-2">{galleryList.length}</h3>
+                                    </div>
+                                    <div className="bg-cream p-6 rounded-2xl border border-olive/15 cursor-pointer" onClick={() => setActiveTab('reservations')}>
+                                        <span className="font-mono text-[10px] text-walnut uppercase">RESERVATIONS</span>
+                                        <h3 className="font-serif text-4xl text-olive font-mono mt-2">{resList.length}</h3>
+                                    </div>
+                                    <div className="bg-cream p-6 rounded-2xl border border-olive/15 cursor-pointer" onClick={() => setActiveTab('ideas')}>
+                                        <span className="font-mono text-[10px] text-walnut uppercase">IDEAS SUBMITTED</span>
+                                        <h3 className="font-serif text-4xl text-olive font-mono mt-2">{ideasList.length}</h3>
+                                    </div>
+                                </div>
+
+                                <div className="bg-cream p-6 rounded-2xl border border-olive/15 space-y-4">
+                                    <h3 className="font-serif text-xl text-olive uppercase">SYSTEM REALTIME SYNC</h3>
+                                    <p className="font-sans text-xs text-espresso/70">When you edit prices, phone numbers, opening hours, or mark items sold out, the public site updates instantly without code redeployments.</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: MENU MANAGEMENT */}
+                        {activeTab === 'menu' && (
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-serif text-2xl text-olive uppercase">MENU ITEMS ({menuList.length})</h3>
+                                    <button onClick={() => setEditMenu({ creativeName: '', normalName: '', price: '$5.50', category: 'coffee', description: '', availability: 'AVAILABLE' })} className="px-5 py-2.5 bg-olive text-cream rounded-xl text-xs uppercase font-semibold">
+                                        + ADD MENU ITEM
+                                    </button>
+                                </div>
+
+                                <div className="bg-cream rounded-2xl border border-olive/15 overflow-hidden">
+                                    <table className="w-full text-left text-xs font-sans">
+                                        <thead className="bg-offwhite border-b border-olive/15 font-mono text-[10px] text-walnut uppercase">
+                                            <tr>
+                                                <th className="p-4">Item</th>
+                                                <th className="p-4">Price</th>
+                                                <th className="p-4">Availability</th>
+                                                <th className="p-4 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-olive/10">
+                                            {menuList.map(item => (
+                                                <tr key={item.id} className="hover:bg-offwhite/50">
+                                                    <td className="p-4">
+                                                        <div className="font-serif text-lg text-olive font-medium">{item.creativeName}</div>
+                                                        <div className="text-xs font-semibold text-walnut">Order as: {item.normalName}</div>
+                                                    </td>
+                                                    <td className="p-4 font-serif text-lg text-terracotta">{item.price}</td>
+                                                    <td className="p-4">
+                                                        <span className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase ${item.availability === 'AVAILABLE' ? 'bg-olive text-cream' : 'bg-terracotta text-cream'}`}>
+                                                            {item.availability}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-right space-x-2">
+                                                        <button onClick={() => setEditMenu(item)} className="px-3 py-1 bg-offwhite border border-olive/20 rounded text-[10px] uppercase">Edit</button>
+                                                        <button onClick={() => db.deleteMenuItem(item.id)} className="px-3 py-1 bg-terracotta text-cream rounded text-[10px] uppercase">Delete</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: GALLERY */}
+                        {activeTab === 'gallery' && (
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-serif text-2xl text-olive uppercase">GALLERY PHOTOS ({galleryList.length})</h3>
+                                    <button onClick={() => setEditGallery({ title: '', category: 'interior', image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop', isPublished: true })} className="px-5 py-2.5 bg-olive text-cream rounded-xl text-xs uppercase">
+                                        + UPLOAD PHOTO
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {galleryList.map(g => (
+                                        <div key={g.id} className="bg-cream rounded-2xl border border-olive/15 overflow-hidden p-4 space-y-3">
+                                            <img src={g.image} alt={g.title} className="w-full h-40 object-cover rounded-xl" />
+                                            <h4 className="font-serif text-xl text-olive uppercase">{g.title}</h4>
+                                            <button onClick={() => db.deleteGallery(g.id)} className="w-full py-2 bg-terracotta text-cream rounded-lg text-xs uppercase">DELETE PHOTO</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: IDEAS MODERATION */}
+                        {activeTab === 'ideas' && (
+                            <div className="space-y-6">
+                                <h3 className="font-serif text-2xl text-olive uppercase">CUSTOMER IDEAS MODERATION</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {ideasList.map(i => (
+                                        <div key={i.id} className="bg-cream p-6 rounded-2xl border border-olive/15 space-y-3">
+                                            <span className="font-mono text-[10px] text-terracotta uppercase">{i.status}</span>
+                                            <h4 className="font-serif text-xl text-olive">{i.title}</h4>
+                                            <p className="font-sans text-xs text-espresso/80 font-light">“{i.msg}”</p>
+                                            <p className="font-sans text-xs font-semibold">— {i.name}</p>
+                                            <div className="flex gap-2 pt-2">
+                                                <button onClick={() => db.updateIdeaStatus(i.id, 'APPROVED')} className="flex-1 py-1.5 bg-olive text-cream text-[10px] rounded uppercase">Approve</button>
+                                                <button onClick={() => db.updateIdeaStatus(i.id, 'HIDDEN')} className="flex-1 py-1.5 bg-cream border text-[10px] rounded uppercase">Hide</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: RESERVATIONS */}
+                        {activeTab === 'reservations' && (
+                            <div className="space-y-6">
+                                <h3 className="font-serif text-2xl text-olive uppercase">RESERVATIONS ({resList.length})</h3>
+                                <div className="bg-cream rounded-2xl border border-olive/15 overflow-hidden">
+                                    <table className="w-full text-left text-xs font-sans">
+                                        <thead className="bg-offwhite border-b border-olive/15 font-mono text-[10px] text-walnut uppercase">
+                                            <tr>
+                                                <th className="p-4">Ref #</th>
+                                                <th className="p-4">Guest</th>
+                                                <th className="p-4">Date & Time</th>
+                                                <th className="p-4">Status</th>
+                                                <th className="p-4 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-olive/10">
+                                            {resList.map(r => (
+                                                <tr key={r.id}>
+                                                    <td className="p-4 font-mono text-olive font-semibold">{r.bookingRef}</td>
+                                                    <td className="p-4 font-semibold">{r.customerName}</td>
+                                                    <td className="p-4 font-mono">{r.date} at {r.time}</td>
+                                                    <td className="p-4"><span className="px-2 py-0.5 rounded bg-olive text-cream text-[10px]">{r.status}</span></td>
+                                                    <td className="p-4 text-right">
+                                                        <button onClick={() => db.updateReservationStatus(r.id, 'CONFIRMED')} className="px-3 py-1 bg-olive text-cream rounded text-[10px] uppercase">Confirm</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: CONTACT DETAILS & OPENING HOURS */}
+                        {activeTab === 'contact' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <form onSubmit={handleSaveContact} className="bg-cream p-8 rounded-2xl border border-olive/15 space-y-4">
+                                    <h3 className="font-serif text-2xl text-olive uppercase border-b border-olive/15 pb-3">CAFÉ CONTACT DETAILS</h3>
+                                    
+                                    <div>
+                                        <label className="block text-xs uppercase text-walnut mb-1">Street Address</label>
+                                        <input type="text" value={contactData.address} onChange={e => setContactData({...contactData, address: e.target.value})} className="w-full p-3 rounded-xl bg-offwhite border text-xs" required />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs uppercase text-walnut mb-1">City & Postal Code</label>
+                                        <input type="text" value={contactData.city} onChange={e => setContactData({...contactData, city: e.target.value})} className="w-full p-3 rounded-xl bg-offwhite border text-xs" required />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs uppercase text-walnut mb-1">Phone Number</label>
+                                            <input type="text" value={contactData.phone} onChange={e => setContactData({...contactData, phone: e.target.value})} className="w-full p-3 rounded-xl bg-offwhite border text-xs font-mono font-semibold text-olive" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs uppercase text-walnut mb-1">Email Address</label>
+                                            <input type="email" value={contactData.email} onChange={e => setContactData({...contactData, email: e.target.value})} className="w-full p-3 rounded-xl bg-offwhite border text-xs font-mono" required />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs uppercase text-walnut mb-1">Google Maps URL</label>
+                                        <input type="text" value={contactData.googleMapsUrl} onChange={e => setContactData({...contactData, googleMapsUrl: e.target.value})} className="w-full p-3 rounded-xl bg-offwhite border text-xs font-mono text-terracotta" required />
+                                    </div>
+
+                                    <button type="submit" className="w-full py-4 bg-olive text-cream rounded-xl text-xs font-sans tracking-widest uppercase font-semibold">SAVE CONTACT DETAILS</button>
+                                </form>
+
+                                <form onSubmit={handleSaveHours} className="bg-cream p-8 rounded-2xl border border-olive/15 space-y-4">
+                                    <h3 className="font-serif text-2xl text-olive uppercase border-b border-olive/15 pb-3">WEEKLY OPENING HOURS</h3>
+                                    <div className="space-y-3">
+                                        {hoursList.map((h, idx) => (
+                                            <div key={h.dayName} className="p-3 rounded-xl bg-offwhite border border-olive/10 flex items-center justify-between text-xs">
+                                                <span className="font-mono text-olive font-semibold w-24">{h.dayName}</span>
+                                                <div className="flex items-center space-x-2 font-mono">
+                                                    <input type="text" disabled={h.isClosed} value={h.openTime} onChange={e => { const list = [...hoursList]; list[idx].openTime = e.target.value; setHoursList(list); }} className="w-16 p-1.5 rounded bg-cream border text-center" />
+                                                    <span>to</span>
+                                                    <input type="text" disabled={h.isClosed} value={h.closeTime} onChange={e => { const list = [...hoursList]; list[idx].closeTime = e.target.value; setHoursList(list); }} className="w-16 p-1.5 rounded bg-cream border text-center" />
+                                                </div>
+                                                <label className="flex items-center space-x-1 font-mono text-[10px]">
+                                                    <input type="checkbox" checked={h.isClosed} onChange={e => { const list = [...hoursList]; list[idx].isClosed = e.target.checked; setHoursList(list); }} />
+                                                    <span>Closed</span>
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button type="submit" className="w-full py-4 bg-olive text-cream rounded-xl text-xs font-sans tracking-widest uppercase font-semibold">SAVE OPENING HOURS</button>
+                                </form>
+                            </div>
+                        )}
+
+                        {/* TAB: ACTIVITY LOGS */}
+                        {activeTab === 'logs' && (
+                            <div className="bg-cream rounded-2xl border border-olive/15 overflow-hidden">
+                                <table className="w-full text-left text-xs font-sans">
+                                    <thead className="bg-offwhite border-b border-olive/15 font-mono text-[10px] text-walnut uppercase">
+                                        <tr>
+                                            <th className="p-4">Timestamp</th>
+                                            <th className="p-4">Admin Email</th>
+                                            <th className="p-4">Action</th>
+                                            <th className="p-4">Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-olive/10 font-mono text-[11px]">
+                                        {logsList.map(log => (
+                                            <tr key={log.id}>
+                                                <td className="p-4 text-walnut">{log.timestamp}</td>
+                                                <td className="p-4 text-olive font-semibold">{log.email}</td>
+                                                <td className="p-4 font-sans font-semibold text-espresso">{log.action}</td>
+                                                <td className="p-4 font-sans text-espresso/80">{log.details}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {/* EDIT MODAL FOR MENU */}
+                        {editMenu && (
+                            <div className="fixed inset-0 z-50 bg-espresso/80 backdrop-blur-md flex items-center justify-center p-4">
+                                <div className="bg-offwhite max-w-md w-full rounded-3xl p-8 border border-olive/20 space-y-4">
+                                    <h3 className="font-serif text-2xl text-olive uppercase">EDIT MENU ITEM</h3>
+                                    <input type="text" placeholder="Creative Title" value={editMenu.creativeName} onChange={e => setEditMenu({...editMenu, creativeName: e.target.value})} className="w-full p-3 rounded-xl bg-cream border text-xs" />
+                                    <input type="text" placeholder="Normal Title" value={editMenu.normalName} onChange={e => setEditMenu({...editMenu, normalName: e.target.value})} className="w-full p-3 rounded-xl bg-cream border text-xs" />
+                                    <input type="text" placeholder="Price" value={editMenu.price} onChange={e => setEditMenu({...editMenu, price: e.target.value})} className="w-full p-3 rounded-xl bg-cream border text-xs font-mono font-semibold text-terracotta" />
+                                    <select value={editMenu.availability} onChange={e => setEditMenu({...editMenu, availability: e.target.value})} className="w-full p-3 rounded-xl bg-cream border text-xs">
+                                        <option value="AVAILABLE">AVAILABLE</option>
+                                        <option value="SOLD_OUT">SOLD OUT</option>
+                                        <option value="HIDDEN">HIDDEN</option>
+                                    </select>
+                                    <textarea placeholder="Description" value={editMenu.description} onChange={e => setEditMenu({...editMenu, description: e.target.value})} className="w-full p-3 rounded-xl bg-cream border text-xs" rows="3" />
+                                    <div className="flex gap-2">
+                                        <button onClick={() => { db.saveMenuItem(editMenu); setEditMenu(null); showToast('✓ Menu item saved & published!'); }} className="flex-1 py-3 bg-olive text-cream rounded-xl text-xs uppercase font-semibold">SAVE & PUBLISH</button>
+                                        <button onClick={() => setEditMenu(null)} className="py-3 px-4 bg-cream text-espresso rounded-xl text-xs">CANCEL</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* EDIT MODAL FOR GALLERY */}
+                        {editGallery && (
+                            <div className="fixed inset-0 z-50 bg-espresso/80 backdrop-blur-md flex items-center justify-center p-4">
+                                <div className="bg-offwhite max-w-md w-full rounded-3xl p-8 border border-olive/20 space-y-4">
+                                    <h3 className="font-serif text-2xl text-olive uppercase">UPLOAD PHOTO</h3>
+                                    <input type="text" placeholder="Photo Title" value={editGallery.title} onChange={e => setEditGallery({...editGallery, title: e.target.value})} className="w-full p-3 rounded-xl bg-cream border text-xs" />
+                                    <input type="text" placeholder="Image URL" value={editGallery.image} onChange={e => setEditGallery({...editGallery, image: e.target.value})} className="w-full p-3 rounded-xl bg-cream border text-xs font-mono" />
+                                    <div className="flex gap-2">
+                                        <button onClick={() => { db.saveGallery(editGallery); setEditGallery(null); showToast('✓ Photo published to gallery!'); }} className="flex-1 py-3 bg-olive text-cream rounded-xl text-xs uppercase">PUBLISH PHOTO</button>
+                                        <button onClick={() => setEditGallery(null)} className="py-3 px-4 bg-cream text-espresso rounded-xl text-xs">CANCEL</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        // --- APP MAIN ROUTER & IMMERSIVE STATE ---
+        const AppRouter = () => {
+            const [route, setRoute] = useState(window.location.hash || '#');
+            const [isLoading, setIsLoading] = useState(true);
+            const [personalization, setPersonalization] = useState('coffee');
+            const [isAudioOn, setIsAudioOn] = useState(false);
+
+            useEffect(() => {
+                const handleHash = () => setRoute(window.location.hash || '#');
+                window.addEventListener('hashchange', handleHash);
+                return () => window.removeEventListener('hashchange', handleHash);
+            }, []);
+
+            const handleToggleAudio = () => {
+                const newState = !isAudioOn;
+                const active = toggleAudioAmbience(newState);
+                setIsAudioOn(active);
+            };
+
+            if (route.startsWith('#admin')) {
+                return <AdminCMS />;
+            }
+
+            return (
+                <div className="relative min-h-screen bg-offwhite text-espresso">
+                    <CustomCursor />
+
+                    {/* Steaming Coffee Loading Animation */}
+                    {isLoading && (
+                        <SteamingCoffeePreloader onComplete={() => setIsLoading(false)} />
+                    )}
+
+                    <div className={isLoading ? 'opacity-0 h-screen overflow-hidden' : 'opacity-100 transition-opacity duration-700'}>
+                        <PublicNavbar
+                            onOpenReservation={() => { const el = document.getElementById('reservation'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
+                            isAudioOn={isAudioOn}
+                            onToggleAudio={handleToggleAudio}
+                        />
+
+                        <main>
+                            <InteractiveHero onOpenReservation={() => { const el = document.getElementById('reservation'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} />
+                            <PersonalizationBar selected={personalization} onSelect={setPersonalization} />
+                            <SketchToRealitySection />
+                            <InteractiveTimeline />
+                            <IdeaDesk />
+                            <BrandStory />
+                            <FiveTables />
+                            <PublicMenu />
+                            <IdeaWall />
+                            <Gallery />
+                            <TakeABreath />
+                            <ConversationalReservation />
+                            <PublicLocation />
+                            <FinalClosingSection onOpenReservation={() => { const el = document.getElementById('reservation'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} />
+                        </main>
+
+                        <PublicFooter onOpenReservation={() => { const el = document.getElementById('reservation'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} />
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(
+            <ErrorBoundary>
+                <AppRouter />
+            </ErrorBoundary>
+        );
+    </script>
+</body>
+</html>
