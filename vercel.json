@@ -1,7 +1,5 @@
 {
-  "cleanUrls": false,
   "rewrites": [
-    { "source": "/google6fc98d5edcbfdac3.html", "destination": "/google6fc98d5edcbfdac3.html" },
-    { "source": "/((?!google6fc98d5edcbfdac3\\.html$).*)", "destination": "/index.html" }
+    { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ]
 }
